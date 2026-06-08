@@ -1,5 +1,7 @@
 Creating a Custom GPT Search Experience for a Specific SharePoint Site Using Azure Functions, Microsoft Graph API, and GPT Actions
+
 Overview
+
 ChatGPT Enterprise allows workspace users to create Custom GPTs with Actions that call external APIs. This guide explains how to create a Custom GPT that calls an Azure Function, which then uses Microsoft Graph API to search SharePoint or OneDrive content.
 The default Microsoft SharePoint connector in ChatGPT searches across the SharePoint and OneDrive content available to the signed-in user. In some cases, a department or business unit may need a more focused experience that searches only a specific SharePoint site, subsite, document library, or OneDrive location.
 For example:
@@ -60,11 +62,19 @@ App Service Permission
 Also confirm that the Azure App Service permission scope is available:
 •	user_impersonation
 This is used by the OAuth flow for the Function App.
+Next got Deployment Tools-->Console. This should open a windows CLI console.
+Install the following Node packages
+1. npm install @microsoft/microsoft-graph-client
+2. npm install axios
+3. npm install pdf-parse
+4. npm install openai
+
 <br>
 <img width="918" height="783" alt="CreateFnApp3" src="https://github.com/user-attachments/assets/eee2a418-972b-4dcf-812e-d5dd90ce4b72" />
 <br>
-________________________________________
+
 Step 3: Capture App Registration Values
+
 When the Function App authentication provider is configured, an App Registration is created in Microsoft Entra ID.
 1.	Go to Microsoft Entra ID > App registrations.
 2.	Find and open the App Registration associated with your Function App.
@@ -197,6 +207,7 @@ High-level process:
 4.	In Microsoft Entra, confirm the App Registration has Sites.Selected.
 5.	Grant the app permission to the specific SharePoint site.
 Using PnP.PowerShell, the pattern is:
+
 Connect-PnPOnline -Url "https://contoso.sharepoint.com/sites/YourSite" -Interactive
 
 Grant-PnPAzureADAppSitePermission `
@@ -204,9 +215,21 @@ Grant-PnPAzureADAppSitePermission `
   -DisplayName "YOUR_APP_NAME" `
   -Site "https://contoso.sharepoint.com/sites/YourSite" `
   -Permissions Read
-You will then grant site permissions using Microsoft Graph API:
+  
+Grant Site Permissions with Microsoft Graph API
+
+You will then grant site permissions using the Microsoft Graph API.
+
+Request:
+
 POST https://graph.microsoft.com/v1.0/sites/{siteId}/permissions
+
+Headers:
+
 Content-Type: application/json
+
+Body:
+
 {
   "roles": ["read"],
   "grantedToIdentities": [
@@ -218,73 +241,93 @@ Content-Type: application/json
     }
   ]
 }
-Use read unless the function truly needs write access.
-This option is stronger than programmatic filtering because it limits what the app can access at the permission layer.
-________________________________________
-Recommended Security Model
-For production use, combine both controls:
-1.	Use Sites.Selected to restrict the app’s permission boundary.
-2.	Use site ID, drive ID, or folder path filtering in code.
-3.	Store approved site and drive IDs in environment variables.
-4.	Never let the GPT or user supply unrestricted Graph paths.
-5.	Log search requests and Graph responses in Application Insights.
-6.	Return only the minimum content needed to answer the user’s question.
-7.	Do not expose access tokens, secrets, raw Graph errors, or internal IDs to the GPT response.
-________________________________________
-Testing Checklist
-Before publishing the GPT, validate the following:
-•	The Azure Function endpoint works with OAuth.
-•	Postman can retrieve an access token.
-•	Postman can call the Function App successfully.
-•	The Function App can call Microsoft Graph.
-•	Search results only come from the intended SharePoint site or OneDrive location.
-•	A user without access to a document cannot retrieve that document through the GPT.
-•	The GPT Action schema validates successfully.
-•	The GPT can authenticate through OAuth.
-•	The GPT returns grounded answers based on the Azure Function response.
-•	Application Insights logs enough detail for troubleshooting without exposing secrets.
-________________________________________
-Troubleshooting Tips
-OAuth token fails
-Check:
-•	Client ID
-•	Client secret
-•	Tenant ID
-•	Authorization URL
-•	Token URL
-•	Scope
-•	Redirect URI
-•	Admin consent
-Postman works but ChatGPT OAuth fails
-Check:
-•	The ChatGPT redirect URI was copied correctly.
-•	The redirect URI was added to the App Registration.
-•	The OAuth scope in the GPT Action matches the exposed API scope.
-•	The client secret is correct and has not expired.
-Graph API returns too many results
-Check:
-•	Whether the code is searching all SharePoint and OneDrive content.
-•	Whether the request includes the correct site ID, drive ID, list ID, or folder path.
-•	Whether Sites.Selected has been configured correctly.
-Graph API returns no results
-Check:
-•	The signed-in user has access to the target SharePoint content.
-•	The app has the required Graph permissions.
-•	Admin consent has been granted.
-•	The target site permission was granted when using Sites.Selected.
-•	The search query is valid.
-•	The target library or folder contains indexed content.
-________________________________________
-Summary
-A Custom GPT with Actions can provide a focused search experience for a specific SharePoint site, document library, subsite, or OneDrive location.
-The recommended architecture is:
-1.	Custom GPT with OAuth-secured Action.
-2.	Azure Function App as the API layer.   
-4.	Microsoft Graph API for SharePoint and OneDrive search.
-5.	Microsoft Entra authentication.
-6.	Sites.Selected and code-level filtering to restrict scope.
-This approach gives teams a controlled, department-specific GPT search experience while still respecting Microsoft 365 identity, permissions, and governance.
 
+Use read unless the Azure Function truly needs write access.
+
+This option is stronger than programmatic filtering because it limits what the app can access at the permission layer.
+Recommended Security Model
+
+For production use, combine both controls:
+
+1. Use Sites.Selected to restrict the app’s permission boundary.
+2. Use site ID, drive ID, or folder path filtering in code.
+3. Store approved site and drive IDs in environment variables.
+4. Never let the GPT or user supply unrestricted Graph paths.
+5. Log search requests and Graph responses in Application Insights.
+6. Return only the minimum content needed to answer the user’s question.
+7. Do not expose access tokens, secrets, raw Graph errors, or internal IDs to the GPT response.
+
+Testing Checklist
+
+Before publishing the GPT, validate the following:
+
+- The Azure Function endpoint works with OAuth.
+- Postman can retrieve an access token.
+- Postman can call the Function App successfully.
+- The Function App can call Microsoft Graph.
+- Search results only come from the intended SharePoint site or OneDrive location.
+- A user without access to a document cannot retrieve that document through the GPT.
+- The GPT Action schema validates successfully.
+- The GPT can authenticate through OAuth.
+- The GPT returns grounded answers based on the Azure Function response.
+- Application Insights logs enough detail for troubleshooting without exposing secrets.
+
+Troubleshooting Tips
+
+OAuth token fails
+
+Check:
+
+- Client ID
+- Client secret
+- Tenant ID
+- Authorization URL
+- Token URL
+- Scope
+- Redirect URI
+- Admin consent
+
+Postman works but ChatGPT OAuth fails
+
+Check:
+
+- The ChatGPT redirect URI was copied correctly.
+- The redirect URI was added to the App Registration.
+- The OAuth scope in the GPT Action matches the exposed API scope.
+- The client secret is correct and has not expired.
+
+Graph API returns too many results
+
+Check:
+
+- Whether the code is searching all SharePoint and OneDrive content.
+- Whether the request includes the correct site ID, drive ID, list ID, or folder path.
+- Whether Sites.Selected has been configured correctly.
+
+Graph API returns no results
+
+Check:
+
+- The signed-in user has access to the target SharePoint content.
+- The app has the required Graph permissions.
+- Admin consent has been granted.
+- The target site permission was granted when using Sites.Selected.
+- The search query is valid.
+- The target library or folder contains indexed content.
+
+Summary
+
+A Custom GPT with Actions can provide a focused search experience for a specific SharePoint site, document library, subsite, or OneDrive location.
+
+The recommended architecture is:
+
+1. Custom GPT with OAuth-secured Action.
+2. Azure Function App as the API layer.
+3. Microsoft Graph API for SharePoint and OneDrive search.
+4. Microsoft Entra authentication.
+5. Sites.Selected and code-level filtering to restrict scope.
+
+This approach gives teams a controlled, department-specific GPT search experience while still respecting Microsoft 365 identity, permissions, and governance.
 Sample Open AI Schema
 Replce tenantID, function url with your azure values
 openapi: 3.1.0
