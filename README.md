@@ -34,10 +34,12 @@ o	Version: Node.js 22, or the current supported Node.js version approved by your
 4.	Under the Networking tab, ensure public access is enabled if ChatGPT needs to call the function endpoint directly.
 5.	Leave the remaining settings as default, or adjust them according to your organization’s Azure standards.
 6.	Enable Application Insights. This is recommended for debugging API calls, authentication issues, and Graph API responses.
+<br>
 <img width="1791" height="922" alt="CreateFnApp4" src="https://github.com/user-attachments/assets/caf071b9-9ca7-41db-a50b-1842083dc3c2" />
-
+<br>
 <img width="1343" height="892" alt="CreateFnApp2" src="https://github.com/user-attachments/assets/69fa2cee-2bf1-43ad-99d0-feb948041aea" />
-________________________________________
+<br>
+
 Step 2: Configure Authentication for the Function App
 1.	Open the Function App created in Step 1.
 2.	In the left navigation, go to Settings > Authentication.
@@ -58,9 +60,9 @@ App Service Permission
 Also confirm that the Azure App Service permission scope is available:
 •	user_impersonation
 This is used by the OAuth flow for the Function App.
-
+<br>
 <img width="918" height="783" alt="CreateFnApp3" src="https://github.com/user-attachments/assets/eee2a418-972b-4dcf-812e-d5dd90ce4b72" />
-
+<br>
 ________________________________________
 Step 3: Capture App Registration Values
 When the Function App authentication provider is configured, an App Registration is created in Microsoft Entra ID.
@@ -78,8 +80,9 @@ o	OAuth 2.0 token endpoint
 o	https://oauth.pstmn.io/v1/callback
 o	https://oauth.pstmn.io/v1/browser-callback
 You will add the ChatGPT OAuth redirect URI later when configuring the GPT Action.
+<br>
 <img width="1791" height="922" alt="CreateFnApp4" src="https://github.com/user-attachments/assets/59f625ab-f741-43f7-8915-4154cf0643c8" />
-
+<br>
 
 ________________________________________
 Step 4: Expose an API Scope
@@ -276,8 +279,56 @@ Summary
 A Custom GPT with Actions can provide a focused search experience for a specific SharePoint site, document library, subsite, or OneDrive location.
 The recommended architecture is:
 1.	Custom GPT with OAuth-secured Action.
-2.	Azure Function App as the API layer.
-3.	Microsoft Graph API for SharePoint and OneDrive search.
-4.	Microsoft Entra authentication.
-5.	Sites.Selected and code-level filtering to restrict scope.
+2.	Azure Function App as the API layer.   
+4.	Microsoft Graph API for SharePoint and OneDrive search.
+5.	Microsoft Entra authentication.
+6.	Sites.Selected and code-level filtering to restrict scope.
 This approach gives teams a controlled, department-specific GPT search experience while still respecting Microsoft 365 identity, permissions, and governance.
+
+Sample Open AI Schema
+Replce tenantID, function url with your azure values
+openapi: 3.1.0
+info:
+  title: SharePoint Search API
+  description: API for searching SharePoint documents.
+  version: 1.0.0
+servers:
+  - url: https://{your_function_app_name}.azurewebsites.net/api
+    description: SharePoint Search API server
+paths:
+  /{your_function_name}?code={enter your specific endpoint id here}:
+    post:
+      operationId: searchSharePoint
+      summary: Searches SharePoint for documents matching a query and term.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                query:
+                  type: string
+                  description: The full query to search for in SharePoint documents.
+                searchTerm:
+                  type: string
+                  description: A specific term to search for within the documents.
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    documentName:
+                      type: string
+                      description: The name of the document.
+                    snippet:
+                      type: string
+                      description: A snippet from the document containing the search term.
+                    url:
+                      type: string
+                      description: The URL to access the document.
