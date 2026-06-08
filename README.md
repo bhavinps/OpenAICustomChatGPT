@@ -1,10 +1,10 @@
-Creating a Custom GPT Search Experience for a Specific SharePoint Site Using Azure Functions, Microsoft Graph API, and GPT Actions
+**Creating a Custom GPT Search Experience for a Specific SharePoint Site Using Azure Functions, Microsoft Graph API, and GPT Actions**
 
-Overview
+**Overview**
 
 ChatGPT Enterprise allows workspace users to create Custom GPTs with Actions that call external APIs. This guide explains how to create a Custom GPT that calls an Azure Function, which then uses Microsoft Graph API to search SharePoint or OneDrive content.
 The default Microsoft SharePoint connector in ChatGPT searches across the SharePoint and OneDrive content available to the signed-in user. In some cases, a department or business unit may need a more focused experience that searches only a specific SharePoint site, subsite, document library, or OneDrive location.
-For example:
+**For example:**
 •	HR may want a GPT that searches only the HR benefits site.
 •	Finance may want a GPT that searches only Finance and Accounting sites.
 •	A project team may want a GPT that searches only a dedicated project SharePoint site.
@@ -16,7 +16,7 @@ This guide covers how to create that experience using:
 •	GPT Actions
 •	Optional SharePoint site-level access restrictions
 ________________________________________
-Prerequisites
+**Prerequisites**
 Before starting, you will need:
 1.	Access to the Azure Portal with permission to create Azure Function Apps and Microsoft Entra App Registrations.
 2.	Access to create or modify Microsoft Graph API permissions.
