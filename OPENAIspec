@@ -1,0 +1,45 @@
+openapi: 3.1.1
+info:
+  title: SharePoint Search API
+  description: API for searching SharePoint documents.
+  version: 1.0.0
+servers:
+  - url: https://sharepointsearch-hrfsf7aza7e4d5cs.canadacentral-01.azurewebsites.net/api
+    description: SharePoint Search API server
+paths:
+  /SearchSolution1?codexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxFoCWybyAzFuJQGKmQ==:
+    post:
+      operationId: searchSharePoint
+      summary: Searches SharePoint for documents matching a query and term.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                query:
+                  type: string
+                  description: The full query to search for in SharePoint documents.
+                searchTerm:
+                  type: string
+                  description: A specific term to search for within the documents.
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    documentName:
+                      type: string
+                      description: The name of the document.
+                    snippet:
+                      type: string
+                      description: A snippet from the document containing the search term.
+                    url:
+                      type: string
+                      description: The URL to access the document.
